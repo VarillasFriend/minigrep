@@ -6,11 +6,7 @@ pub fn run (config: Config) -> Result<(), Box<dyn Error>> {
     for filename in config.filenames {
         let contents = fs::read_to_string(&filename)?;
 
-        let results = if config.ignore_case {
-            search_case_insensitive(&config.query, &contents)
-        } else {
-            search(&config.query, &contents)
-        };
+        let results = search(&config.query, &contents, config.ignore_case);
 
         if results.len() > 0 {
             println!("{}:", filename);
@@ -62,20 +58,12 @@ impl Config {
     }
 }
 
-pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+pub fn search<'a>(query: &str, contents: &'a str, case: bool) -> Vec<&'a str> {
     contents
         .lines()
-        .filter(|line| line.contains(query))
+        .filter(|line| (if case { line.to_lowercase() } else { line.to_string() }).contains(query))
         .collect()
 }
-
-pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    contents
-        .lines()
-        .filter(|line| line.to_lowercase().contains(&query.to_lowercase()))
-        .collect()
-}
-
 
 #[cfg(test)]
 mod tests {
